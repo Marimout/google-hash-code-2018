@@ -33,8 +33,102 @@ namespace f_max
             foreach (var inputFile in inputFiles)
             {
                 Console.WriteLine(inputFile);
-                Compute(inputFile, inputFile.Replace(".in", ".out"));
+                Compute2(inputFile, inputFile.Replace(".in", ".out2"));
             }
+        }
+
+        private static void Compute2(string inputFile, string outputFile)
+        {
+            using (var writer = new StreamWriter(outputFile))
+            {
+                using (var reader = new StreamReader(inputFile))
+                {
+                    var t = Array.ConvertAll(reader.ReadLine().Split(' '), Int32.Parse);
+                    R = t[0];
+                    C = t[1];
+                    F = t[2];
+                    N = t[3];
+                    B = t[4];
+                    T = t[5];
+
+                    cars = new List<Car>();
+                    rides = new List<Ride>();
+
+                    for (int i = 0; i < F; i++)
+                    {
+                        cars.Add(new Car());
+                    }
+
+                    for (int i = 0; i < N; i++)
+                    {
+                        t = Array.ConvertAll(reader.ReadLine().Split(' '), Int32.Parse);
+
+                        rides.Add(new Ride(i, t[0], t[1], t[2], t[3], t[4], t[5]));
+                    }
+
+                    for (int i = 0; i < N; i++)
+                    {
+                        Car maxCar = null;
+                        var maxScore = Int32.MinValue;
+                        var minPenalty = Int32.MaxValue;
+
+                        foreach (var c in cars)
+                        {
+                            var (score, penalty) = EstimatedScore2(c, rides[i]);
+                            if (score > maxScore || (score == maxScore && penalty < minPenalty))
+                            {
+                                maxScore = score;
+                                minPenalty = penalty;
+                                maxCar = c;
+                            }
+                        }
+
+                        if (maxScore > 0)
+                        {
+                            Affect(maxCar, rides[i]);
+                        }
+                    }
+
+                    for (int i = 0; i < F; i++)
+                    {
+                        writer.Write($"{cars[i].Missions.Count} ");
+
+                        foreach (var r in cars[i].Missions)
+                        {
+                            writer.Write($"{r} ");
+                        }
+                        writer.WriteLine();
+                    }
+
+                }
+            }
+        }
+
+        public static (int score, int penalty) EstimatedScore2(Car c, Ride r)
+        {
+            int s = 0;
+            int p = 0;
+            int distanceToStart = Math.Abs(c.x - r.a) + Math.Abs(c.y - r.b);
+
+            var tt = c.t + distanceToStart;
+
+            if (tt <= r.s)
+            {
+                p = r.s - tt;
+                tt = r.s;
+                s += B;
+            }
+
+            if (tt + r.Length <= r.f)
+            {
+                s += r.Length;
+            }
+            else
+            {
+                s = 0;
+            }
+
+            return (s, p);
         }
 
         private static void Compute(string inputFile, string outputFile)
