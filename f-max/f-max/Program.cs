@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,8 +9,14 @@ namespace f_max
 {
     class Program
     {
-        public static string inputFile = @"..\..\..\..\data\a_example.in";
-        public static string outputFile = @"..\..\..\..\data\a_example.out";
+        public static List<string> inputFiles = new List<string>
+        {
+            @"..\..\..\..\data\a_example.in",
+            @"..\..\..\..\data\b_should_be_easy.in",
+            @"..\..\..\..\data\c_no_hurry.in",
+            @"..\..\..\..\data\d_metropolis.in",
+            @"..\..\..\..\data\e_high_bonus.in"
+        };
 
         public static int R;
         public static int C;
@@ -23,6 +29,15 @@ namespace f_max
         public static List<Car> cars = new List<Car>();
 
         static void Main(string[] args)
+        {
+            foreach (var inputFile in inputFiles)
+            {
+                Console.WriteLine(inputFile);
+                Compute(inputFile, inputFile.Replace(".in", ".out"));
+            }
+        }
+
+        private static void Compute(string inputFile, string outputFile)
         {
             using (var writer = new StreamWriter(outputFile))
             {
@@ -45,17 +60,25 @@ namespace f_max
                     {
                         t = Array.ConvertAll(reader.ReadLine().Split(' '), Int32.Parse);
 
-                        rides.Add(new Ride(t[0], t[1], t[2], t[3], t[4], t[5]));
+                        rides.Add(new Ride(i, t[0], t[1], t[2], t[3], t[4], t[5]));
                     }
 
                     for (int i = 0; i < N; i++)
                     {
+                        if (i % 50 == 0) Console.WriteLine(i);
+
+                        Ride ride = null;
                         Car maxCar = null;
                         var maxScore = Int32.MinValue;
 
                         foreach (var c in cars)
                         {
-                            var score = EstimatedScore(c, rides[i]);
+                            ride = rides
+                                .Where(x => x.AffectedCar == null)
+                                .OrderBy(r => Math.Abs(c.x - r.a) + Math.Abs(c.y - r.b))
+                                .First();
+
+                            var score = EstimatedScore(c, ride);
                             if (score > maxScore)
                             {
                                 maxScore = score;
@@ -65,7 +88,8 @@ namespace f_max
 
                         if (maxScore > 0)
                         {
-                            Affect(maxCar, i);
+                            Affect(maxCar, ride);
+                            rides.Remove(ride);
                         }
                     }
 
@@ -79,7 +103,6 @@ namespace f_max
                         }
                         writer.WriteLine();
                     }
-
                 }
             }
         }
@@ -109,11 +132,11 @@ namespace f_max
             return s;
         }
 
-        public static void Affect(Car c, int rIndex)
+        public static void Affect(Car c, Ride ride)
         {
-            c.Missions.Add(rIndex);
+            c.Missions.Add(ride.id);
 
-            Ride r = rides[rIndex];
+            Ride r = ride;
 
             c.x = r.x;
             c.y = r.y;
@@ -140,6 +163,7 @@ namespace f_max
 
     public class Ride
     {
+        public readonly int id;
         public int a, b;
         public int x, y;
         public int s;
@@ -147,8 +171,9 @@ namespace f_max
 
         public Car AffectedCar;
 
-        public Ride(int _a, int _b, int _x, int _y, int _s, int _f)
+        public Ride(int _id, int _a, int _b, int _x, int _y, int _s, int _f)
         {
+            id = _id;
             a = _a;
             b = _b;
             x = _x;
@@ -168,3 +193,4 @@ namespace f_max
         }
     }
 }
+
