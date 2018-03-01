@@ -10,6 +10,7 @@ namespace f_max
     class Program
     {
         public static string inputFile = @"..\..\..\..\data\a_example.in";
+        public static string outputFile = @"..\..\..\..\data\a_example.out";
 
         public static int R;
         public static int C;
@@ -23,34 +24,70 @@ namespace f_max
 
         static void Main(string[] args)
         {
-            using (var reader = new StreamReader(inputFile))
+            using (var writer = new StreamWriter(outputFile))
             {
-                var t = Array.ConvertAll(reader.ReadLine().Split(' '), Int32.Parse);
-                R = t[0];
-                C = t[1];
-                F = t[2];
-                N = t[3];
-                B = t[4];
-                T = t[5];
-
-                for (int i = 0; i < F; i++)
+                using (var reader = new StreamReader(inputFile))
                 {
-                    cars.Add(new Car());
-                }
+                    var t = Array.ConvertAll(reader.ReadLine().Split(' '), Int32.Parse);
+                    R = t[0];
+                    C = t[1];
+                    F = t[2];
+                    N = t[3];
+                    B = t[4];
+                    T = t[5];
 
-                for (int i = 0; i < N; i++)
-                {
-                    t = Array.ConvertAll(reader.ReadLine().Split(' '), Int32.Parse);
+                    for (int i = 0; i < F; i++)
+                    {
+                        cars.Add(new Car());
+                    }
 
-                    rides.Add(new Ride(t[0], t[1], t[2], t[3], t[4], t[5]));
+                    for (int i = 0; i < N; i++)
+                    {
+                        t = Array.ConvertAll(reader.ReadLine().Split(' '), Int32.Parse);
+
+                        rides.Add(new Ride(t[0], t[1], t[2], t[3], t[4], t[5]));
+                    }
+
+                    for (int i = 0; i < N; i++)
+                    {
+                        Car maxCar = null;
+                        var maxScore = Int32.MinValue;
+
+                        foreach (var c in cars)
+                        {
+                            var score = EstimatedScore(c, rides[i]);
+                            if (score > maxScore)
+                            {
+                                maxScore = score;
+                                maxCar = c;
+                            }
+                        }
+
+                        if (maxScore > 0)
+                        {
+                            Affect(maxCar, i);
+                        }
+                    }
+
+                    for (int i = 0; i < F; i++)
+                    {
+                        writer.Write($"{cars[i].Missions.Count} ");
+
+                        foreach (var r in cars[i].Missions)
+                        {
+                            writer.Write($"{r} ");
+                        }
+                        writer.WriteLine();
+                    }
+
                 }
             }
         }
 
-        public int EstimatedScore(Car c, Ride r)
+        public static int EstimatedScore(Car c, Ride r)
         {
             int s = 0;
-            int distanceToStart = Math.Abs(c.x- r.a) + Math.Abs(c.y - r.b);
+            int distanceToStart = Math.Abs(c.x - r.a) + Math.Abs(c.y - r.b);
 
             var tt = c.t + distanceToStart;
 
@@ -72,9 +109,18 @@ namespace f_max
             return s;
         }
 
-        public static void Affect(Car c, Ride r)
+        public static void Affect(Car c, int rIndex)
         {
-            c.Missions.Add(r);
+            c.Missions.Add(rIndex);
+
+            Ride r = rides[rIndex];
+
+            c.x = r.x;
+            c.y = r.y;
+
+            int distanceToStart = Math.Abs(c.x - r.a) + Math.Abs(c.y - r.b);
+            c.t = Math.Max(c.t + distanceToStart, r.s) + r.Length;
+
             r.AffectedCar = c;
         }
     }
@@ -84,11 +130,11 @@ namespace f_max
         public int x, y;
         public int t;
 
-        public List<Ride> Missions;
+        public List<int> Missions;
 
         public Car()
         {
-            Missions = new List<Ride>();
+            Missions = new List<int>();
         }
     }
 
