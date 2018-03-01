@@ -33,7 +33,7 @@ namespace f_max
             foreach (var inputFile in inputFiles)
             {
                 Console.WriteLine(inputFile);
-                Compute2(inputFile, inputFile.Replace(".in", ".out2"));
+                Compute2(inputFile, inputFile.Replace(".in", ".out3"));
             }
         }
 
@@ -66,6 +66,8 @@ namespace f_max
                         rides.Add(new Ride(i, t[0], t[1], t[2], t[3], t[4], t[5]));
                     }
 
+                    rides = rides.OrderByDescending(x => x.Length).ToList();
+
                     for (int i = 0; i < N; i++)
                     {
                         Car maxCar = null;
@@ -75,6 +77,7 @@ namespace f_max
                         foreach (var c in cars)
                         {
                             var (score, penalty) = EstimatedScore2(c, rides[i]);
+
                             if (score > maxScore || (score == maxScore && penalty < minPenalty))
                             {
                                 maxScore = score;
